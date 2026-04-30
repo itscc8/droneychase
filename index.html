@@ -3,24 +3,2345 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DroneyChase</title>
+    <title>DroneyChase - Tutorial</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Chakra+Petch:wght@300;400;600&display=swap');
+
+      :root {
+        color-scheme: dark;
+        --ink: #e6e9ef;
+        --muted: #9aa3b0;
+        --neon: #56d4f2;
+        --neon-soft: rgba(86, 212, 242, 0.35);
+        --pink: #ff8acb;
+        --pink-soft: rgba(255, 138, 203, 0.35);
+        --amber: #ff8acb;
+        --danger: #ff8acb;
+        --bg-0: #0a0c10;
+        --bg-1: #12161d;
+        --panel: rgba(14, 18, 24, 0.78);
+        --panel-border: rgba(120, 140, 170, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: radial-gradient(circle at 20% 10%, #1a222d, #0b0e13 45%, #07080c 100%);
+        font-family: 'Chakra Petch', system-ui, sans-serif;
+        color: var(--ink);
+        touch-action: none;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.02) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+        mix-blend-mode: screen;
+        opacity: 0.25;
+        pointer-events: none;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.7) 95%);
+        pointer-events: none;
+      }
+
+      #scene {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        padding: 24px 28px;
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 18px;
+        padding: 16px 18px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+      }
+
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .logo {
+        width: 180px;
+        height: auto;
+        filter: drop-shadow(0 12px 40px rgba(86, 212, 242, 0.35));
+      }
+
+      .logo-mini {
+        width: 72px;
+        height: auto;
+        filter: drop-shadow(0 6px 16px rgba(86, 212, 242, 0.35));
+      }
+
+      .title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 32px;
+        letter-spacing: 2px;
+        margin: 0 0 10px 0;
+        color: var(--neon);
+        text-transform: uppercase;
+      }
+
+      .tag {
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .objective {
+        font-size: 15px;
+        margin: 8px 0 0 0;
+      }
+
+      .objective strong {
+        color: var(--amber);
+        font-weight: 600;
+      }
+
+      .stat {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        margin-top: 8px;
+        color: var(--muted);
+      }
+
+      #status {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 28px;
+        letter-spacing: 2px;
+        color: var(--danger);
+      }
+
+      #note {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      #touch-ring {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 230px;
+        height: 230px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        border: 1px solid var(--neon-soft);
+        box-shadow: 0 0 40px rgba(86, 212, 242, 0.18);
+        pointer-events: none;
+        animation: pulse 3s ease-in-out infinite;
+      }
+
+      #heading-line {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 4px;
+        height: 120px;
+        transform-origin: 50% 100%;
+        background: linear-gradient(180deg, rgba(86, 212, 242, 0) 0%, rgba(86, 212, 242, 0.85) 100%);
+        transform: translate(-50%, -100%) rotate(0deg);
+        pointer-events: none;
+      }
+
+      #center-dot {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--neon);
+        box-shadow: 0 0 14px rgba(86, 212, 242, 0.9);
+        pointer-events: none;
+      }
+
+      #speedlines {
+        position: fixed;
+        inset: -20% -10% -20% -10%;
+        background:
+          repeating-linear-gradient(
+            110deg,
+            rgba(86, 212, 242, 0.05),
+            rgba(86, 212, 242, 0.05) 1px,
+            transparent 1px,
+            transparent 12px
+          ),
+          radial-gradient(circle at 50% 50%, rgba(255, 138, 203, 0.1), transparent 60%);
+        opacity: 0;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        animation: speedflow 1.6s linear infinite;
+        transition: opacity 0.4s ease;
+      }
+
+      #speedlines::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.12), transparent 65%);
+        opacity: 0.25;
+      }
+
+      #siren-flash {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(255, 138, 203, 0.18), rgba(86, 212, 242, 0.18));
+        mix-blend-mode: screen;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        animation: sirenPulse 1s ease-in-out infinite;
+      }
+
+      body.siren #siren-flash {
+        opacity: 0.25;
+      }
+
+      @keyframes sirenPulse {
+        0%,
+        100% {
+          opacity: 0.1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+
+      body.chase #speedlines {
+        opacity: 0.3;
+      }
+
+      body.boost #speedlines {
+        opacity: 0.55;
+        animation-duration: 0.7s;
+      }
+
+      @keyframes speedflow {
+        from {
+          transform: translateY(0);
+        }
+        to {
+          transform: translateY(6%);
+        }
+      }
+
+      body.start #hud {
+        opacity: 0.35;
+        filter: blur(1px);
+      }
+
+      body.start #touch-ring,
+      body.start #heading-line,
+      body.start #center-dot {
+        opacity: 0.25;
+      }
+
+      body.start #controls {
+        opacity: 0.35;
+      }
+
+      body.lock #center-dot {
+        background: var(--danger);
+        box-shadow: 0 0 18px rgba(255, 138, 203, 0.85);
+      }
+
+      .meter {
+        height: 6px;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 6px;
+        background: rgba(12, 16, 24, 0.6);
+        border: 1px solid rgba(120, 140, 170, 0.2);
+      }
+
+      .meter-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, rgba(70, 199, 240, 0.2), rgba(70, 199, 240, 0.9));
+        transition: width 0.2s ease;
+      }
+
+      .meter-fill.warn {
+        background: linear-gradient(90deg, rgba(255, 138, 203, 0.4), rgba(255, 138, 203, 0.95));
+      }
+
+      .meter-fill.boost {
+        background: linear-gradient(90deg, rgba(86, 212, 242, 0.4), rgba(86, 212, 242, 0.95));
+      }
+
+      #controls {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+        z-index: 9;
+      }
+
+      #mix-panel {
+        pointer-events: auto;
+      }
+
+      .audio-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 13px;
+        margin-top: 10px;
+        color: var(--muted);
+      }
+
+      .slider-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12px;
+        margin-top: 6px;
+        color: var(--muted);
+      }
+
+      .slider-row input[type='range'] {
+        width: 130px;
+        accent-color: var(--neon);
+      }
+
+      .toggle-btn {
+        margin-top: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(86, 212, 242, 0.5);
+        background: linear-gradient(120deg, rgba(86, 212, 242, 0.25), rgba(16, 20, 28, 0.85));
+        color: var(--ink);
+        font-family: 'Chakra Petch', sans-serif;
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      #restart-btn {
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        height: 50px;
+        border-radius: 14px;
+        font-size: 14px;
+      }
+
+      body.caught #restart-btn {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .control-btn {
+        pointer-events: auto;
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 138, 203, 0.6);
+        background: radial-gradient(circle at 30% 30%, rgba(86, 212, 242, 0.35), rgba(12, 14, 20, 0.9));
+        color: var(--ink);
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        opacity: 0.85;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+
+      .control-btn:active,
+      .control-btn.active {
+        transform: scale(0.96);
+        opacity: 1;
+      }
+
+      .control-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      .control-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      #start-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: radial-gradient(circle at 20% 10%, rgba(22, 26, 36, 0.85), rgba(6, 7, 10, 0.95) 55%),
+          linear-gradient(120deg, rgba(12, 16, 22, 0.92), rgba(8, 10, 14, 0.55));
+        z-index: 10;
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      #start-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-8px);
+      }
+
+      .start-card {
+        max-width: 560px;
+        width: min(90vw, 560px);
+        text-align: left;
+        display: grid;
+        gap: 12px;
+        animation: floatIn 1.2s ease;
+      }
+
+      #radio {
+        position: fixed;
+        left: 24px;
+        bottom: 24px;
+        max-width: 320px;
+        padding: 12px 14px;
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: 14px;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+        z-index: 8;
+      }
+
+      #radio-label {
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      #radio-text {
+        margin-top: 6px;
+        font-size: 14px;
+        color: var(--ink);
+      }
+
+      #result-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: radial-gradient(circle at 20% 10%, rgba(26, 28, 38, 0.92), rgba(8, 10, 14, 0.98) 60%);
+        z-index: 11;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+
+      #result-screen.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .result-card {
+        width: min(92vw, 520px);
+        display: grid;
+        gap: 12px;
+        text-align: left;
+      }
+
+      .result-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 32px;
+        letter-spacing: 2px;
+        margin: 0;
+        color: var(--neon);
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px 14px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .result-score {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 40px;
+        letter-spacing: 2px;
+        color: var(--pink);
+      }
+
+      .start-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(38px, 6vw, 54px);
+        letter-spacing: 4px;
+        color: var(--neon);
+        margin: 0;
+      }
+
+      .start-sub {
+        color: var(--muted);
+        font-size: 14px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .start-objective {
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--ink);
+      }
+
+      .start-list {
+        display: grid;
+        gap: 6px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .start-button {
+        margin-top: 6px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(86, 212, 242, 0.5);
+        background: linear-gradient(120deg, rgba(86, 212, 242, 0.35), rgba(12, 20, 30, 0.9));
+        color: var(--ink);
+        font-family: 'Chakra Petch', sans-serif;
+        font-size: 15px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 0 30px rgba(86, 212, 242, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .start-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 40px rgba(86, 212, 242, 0.35);
+      }
+
+      .start-foot {
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      @keyframes floatIn {
+        0% {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: translate(-50%, -50%) scale(0.98);
+          opacity: 0.65;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.02);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(0.98);
+          opacity: 0.65;
+        }
+      }
+
+      @media (max-width: 900px) {
+        #hud {
+          grid-template-columns: 1fr;
+        }
+
+        #touch-ring {
+          width: 190px;
+          height: 190px;
+        }
+
+        #controls {
+          right: 16px;
+          bottom: 18px;
+        }
+
+        .control-btn {
+          width: 76px;
+          height: 76px;
+          font-size: 16px;
+        }
+
+        .slider-row input[type='range'] {
+          width: 100px;
+        }
+      }
+    </style>
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js"
         }
       }
     </script>
   </head>
   <body>
-    <script>
-      import * as THREE from 'three'
-      import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+    <canvas id="scene"></canvas>
+    <div id="speedlines"></div>
+    <div id="siren-flash"></div>
+    <div id="start-screen">
+      <div class="panel start-card">
+        <div class="brand-row">
+          <img src="DroneyChase.svg" alt="DroneyChase logo" class="logo" />
+          <div>
+            <div class="tag">Tutorial Level / Noir Highway</div>
+            <h1 class="start-title">Droney Chase</h1>
+            <div class="start-sub">Motorcycle pursuit with anime noir styling</div>
+          </div>
+        </div>
+        <div class="start-objective">
+          Objective: Hold the shoulder until the fly-by, then close the gap and get near the target.
+        </div>
+        <div class="start-list">
+          <div>Drag around the centered bike to steer.</div>
+          <div>Stay inside the three-lane highway to keep speed.</div>
+          <div>Watch for the drone launch when the siren hits.</div>
+          <div>Hold Boost to surge and close the lock-on gap.</div>
+        </div>
+        <button class="start-button" id="start-button">Start Chase</button>
+        <div class="start-foot">Audio uses a placeholder siren. Tap start to arm audio.</div>
+      </div>
+    </div>
+    <div id="result-screen">
+      <div class="panel result-card">
+        <img src="DroneyChase.svg" alt="DroneyChase logo" class="logo-mini" />
+        <div class="tag">Level 01 Complete</div>
+        <h2 class="result-title">Target Secured</h2>
+        <div class="result-grid">
+          <div>Chase Time</div>
+          <div id="result-time">0:00</div>
+          <div>Top Speed</div>
+          <div id="result-speed">0 mph</div>
+          <div>Near Misses</div>
+          <div id="result-near">0</div>
+          <div>Collisions</div>
+          <div id="result-collisions">0</div>
+          <div>Boost Time</div>
+          <div id="result-boost">0.0 s</div>
+        </div>
+        <div class="result-score" id="result-score">0</div>
+        <button class="start-button" id="result-replay">Run Again</button>
+        <div class="start-foot">Level 02 locked in demo build.</div>
+      </div>
+    </div>
+    <div id="hud">
+      <div class="panel">
+        <div class="brand-row">
+          <img src="DroneyChase.svg" alt="DroneyChase logo" class="logo-mini" />
+          <div>
+            <div class="tag">Level 01 / Noir Highway</div>
+            <div class="title">Droney Chase</div>
+          </div>
+        </div>
+        <div class="objective" id="objective">Objective: <strong>Hold position. Wait for the fly-by.</strong></div>
+        <div class="stat">
+          <span>Phase</span>
+          <span id="phase-text">Patrol</span>
+        </div>
+        <div class="meter">
+          <div class="meter-fill" id="phase-fill"></div>
+        </div>
+        <div class="stat">
+          <span>Control</span>
+          <span>Drag around the bike to steer</span>
+        </div>
+        <div class="stat">
+          <span>Siren</span>
+          <span id="siren">Standby</span>
+        </div>
+      </div>
+      <div class="panel" id="mix-panel" style="text-align: right;">
+        <div id="status">PATROL</div>
+        <div class="stat">
+          <span>Speed</span>
+          <span id="speed">0 mph</span>
+        </div>
+        <div class="stat">
+          <span>Chase</span>
+          <span id="time-text">0:00</span>
+        </div>
+        <div class="stat">
+          <span>Score</span>
+          <span id="score-text">0</span>
+        </div>
+        <div class="stat">
+          <span>Distance</span>
+          <span id="distance">---</span>
+        </div>
+        <div class="stat">
+          <span>Lock</span>
+          <span id="lock-text">---</span>
+        </div>
+        <div class="meter">
+          <div class="meter-fill warn" id="lock-fill"></div>
+        </div>
+        <div class="stat">
+          <span>Drone</span>
+          <span id="drone-text">Docked</span>
+        </div>
+        <div class="stat">
+          <span>Boost</span>
+          <span id="boost-text">Ready</span>
+        </div>
+        <div class="meter">
+          <div class="meter-fill boost" id="boost-fill"></div>
+        </div>
+        <div id="note">Tap once to arm audio. Hold Boost to surge.</div>
+        <div class="audio-row">
+          <span>Audio</span>
+          <span id="audio-status">Live</span>
+        </div>
+        <div class="slider-row">
+          <span>Master</span>
+          <input id="master-slider" type="range" min="0" max="1" step="0.01" value="0.85" />
+        </div>
+        <div class="slider-row">
+          <span>Siren</span>
+          <input id="siren-slider" type="range" min="0" max="1" step="0.01" value="0.7" />
+        </div>
+        <div class="slider-row">
+          <span>Engine</span>
+          <input id="engine-slider" type="range" min="0" max="1" step="0.01" value="0.65" />
+        </div>
+        <button class="toggle-btn" id="mute-btn">Mute</button>
+      </div>
+    </div>
+    <div id="touch-ring"></div>
+    <div id="heading-line"></div>
+    <div id="center-dot"></div>
+    <div id="controls">
+      <button class="control-btn" id="restart-btn">Restart</button>
+      <button class="control-btn" id="boost-btn">Boost</button>
+      <div class="control-label">Hold to surge</div>
+    </div>
+    <div id="radio">
+      <div id="radio-label">Dispatch</div>
+      <div id="radio-text">Unit 12 on patrol. Awaiting contact.</div>
+    </div>
 
-      const controls = new OrbitControls(camera, renderer.domElement)
-      const loader = new GLTFLoader()
+    <script type="module">
+      import * as THREE from 'three'
+
+      const canvas = document.getElementById('scene')
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      renderer.outputColorSpace = THREE.SRGBColorSpace
+      renderer.toneMapping = THREE.ACESFilmicToneMapping
+      renderer.toneMappingExposure = 0.9
+      renderer.shadowMap.enabled = true
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
+      const scene = new THREE.Scene()
+      scene.background = new THREE.Color(0x05060a)
+      scene.fog = new THREE.FogExp2(0x05060a, 0.02)
+
+      const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 1200)
+      const cameraOffset = new THREE.Vector3(0, 40, 26)
+      const cameraTarget = new THREE.Vector3()
+      const cameraShake = { intensity: 0 }
+      const shakeOffset = new THREE.Vector3()
+
+      const ambientLight = new THREE.AmbientLight(0x9aa8bb, 0.28)
+      const keyLight = new THREE.DirectionalLight(0xe8f3ff, 0.85)
+      keyLight.position.set(-30, 60, 20)
+      keyLight.castShadow = true
+      keyLight.shadow.mapSize.width = 1024
+      keyLight.shadow.mapSize.height = 1024
+      keyLight.shadow.camera.near = 10
+      keyLight.shadow.camera.far = 180
+      keyLight.shadow.camera.left = -60
+      keyLight.shadow.camera.right = 60
+      keyLight.shadow.camera.top = 60
+      keyLight.shadow.camera.bottom = -60
+      const rimLight = new THREE.DirectionalLight(0x46c7f0, 0.45)
+      rimLight.position.set(30, 25, -30)
+      const fillLight = new THREE.DirectionalLight(0xf2c76a, 0.18)
+      fillLight.position.set(0, 20, 40)
+      scene.add(ambientLight, keyLight, rimLight, fillLight)
+
+      const createNoiseTexture = (baseHex, variance, repeatX, repeatY) => {
+        const size = 256
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        const image = ctx.createImageData(size, size)
+        const base = new THREE.Color(baseHex)
+        for (let i = 0; i < image.data.length; i += 4) {
+          const n = (Math.random() - 0.5) * variance
+          image.data[i] = THREE.MathUtils.clamp((base.r + n) * 255, 0, 255)
+          image.data[i + 1] = THREE.MathUtils.clamp((base.g + n) * 255, 0, 255)
+          image.data[i + 2] = THREE.MathUtils.clamp((base.b + n) * 255, 0, 255)
+          image.data[i + 3] = 255
+        }
+        ctx.putImageData(image, 0, 0)
+        const texture = new THREE.CanvasTexture(canvas)
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.repeat.set(repeatX, repeatY)
+        texture.anisotropy = 4
+        return texture
+      }
+
+      const createWindowTexture = () => {
+        const size = 256
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#0b111a'
+        ctx.fillRect(0, 0, size, size)
+        for (let i = 0; i < 900; i += 1) {
+          const x = Math.floor(Math.random() * size)
+          const y = Math.floor(Math.random() * size)
+          const w = 2 + Math.floor(Math.random() * 4)
+          const h = 2 + Math.floor(Math.random() * 4)
+          const on = Math.random() > 0.6
+          ctx.fillStyle = on ? 'rgba(242, 199, 106, 0.9)' : 'rgba(16, 22, 32, 0.7)'
+          ctx.fillRect(x, y, w, h)
+        }
+        const texture = new THREE.CanvasTexture(canvas)
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.repeat.set(2, 2)
+        return texture
+      }
+
+      const createSkyDome = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 512
+        canvas.height = 512
+        const ctx = canvas.getContext('2d')
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
+        gradient.addColorStop(0, '#121a2f')
+        gradient.addColorStop(0.45, '#0a0f1b')
+        gradient.addColorStop(1, '#05060a')
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        const texture = new THREE.CanvasTexture(canvas)
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide })
+        const geometry = new THREE.SphereGeometry(520, 36, 36)
+        return new THREE.Mesh(geometry, material)
+      }
+
+      const world = {
+        length: 1000,
+        laneWidth: 4.2,
+        lanesPerDirection: 3,
+        medianWidth: 1.6,
+        shoulderWidth: 4
+      }
+      world.roadWidth = world.laneWidth * world.lanesPerDirection * 2 + world.medianWidth
+      world.totalWidth = world.roadWidth + world.shoulderWidth * 2
+
+      const skyDome = createSkyDome()
+      scene.add(skyDome)
+
+      const moon = new THREE.Mesh(
+        new THREE.SphereGeometry(6, 24, 24),
+        new THREE.MeshStandardMaterial({
+          color: 0xd8e4ff,
+          emissive: 0xd8e4ff,
+          emissiveIntensity: 0.55,
+          roughness: 0.6
+        })
+      )
+      moon.position.set(-80, 90, -240)
+      scene.add(moon)
+
+      const moonLight = new THREE.DirectionalLight(0xcfe2ff, 0.35)
+      moonLight.position.set(-80, 90, -240)
+      scene.add(moonLight)
+
+      const roadGroup = new THREE.Group()
+      const groundTexture = createNoiseTexture(0x07090e, 0.12, 6, 24)
+      const asphaltTexture = createNoiseTexture(0x0b0f16, 0.09, 12, 56)
+      const shoulderTexture = createNoiseTexture(0x10131b, 0.08, 8, 32)
+      const groundMat = new THREE.MeshStandardMaterial({ color: 0x07090e, roughness: 0.95, map: groundTexture })
+      const asphaltMat = new THREE.MeshStandardMaterial({
+        color: 0x0b0f16,
+        roughness: 0.75,
+        metalness: 0.18,
+        map: asphaltTexture
+      })
+      const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x10131b, roughness: 0.9, map: shoulderTexture })
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(world.totalWidth + 20, world.length), groundMat)
+      ground.rotation.x = -Math.PI / 2
+      ground.position.y = -0.06
+      ground.receiveShadow = true
+      roadGroup.add(ground)
+
+      const asphalt = new THREE.Mesh(new THREE.PlaneGeometry(world.roadWidth, world.length), asphaltMat)
+      asphalt.rotation.x = -Math.PI / 2
+      asphalt.receiveShadow = true
+      roadGroup.add(asphalt)
+
+      const sheenMat = new THREE.MeshStandardMaterial({
+        color: 0x0f1420,
+        roughness: 0.18,
+        metalness: 0.35,
+        transparent: true,
+        opacity: 0.35
+      })
+      const wetSheen = new THREE.Mesh(new THREE.PlaneGeometry(world.roadWidth * 0.98, world.length), sheenMat)
+      wetSheen.rotation.x = -Math.PI / 2
+      wetSheen.position.y = 0.04
+      roadGroup.add(wetSheen)
+
+      const shoulderGeo = new THREE.PlaneGeometry(world.shoulderWidth, world.length)
+      const shoulderLeft = new THREE.Mesh(shoulderGeo, shoulderMat)
+      shoulderLeft.rotation.x = -Math.PI / 2
+      shoulderLeft.position.set(-world.roadWidth / 2 - world.shoulderWidth / 2, -0.03, 0)
+      shoulderLeft.receiveShadow = true
+      roadGroup.add(shoulderLeft)
+      const shoulderRight = shoulderLeft.clone()
+      shoulderRight.position.x = world.roadWidth / 2 + world.shoulderWidth / 2
+      shoulderRight.receiveShadow = true
+      roadGroup.add(shoulderRight)
+
+      const lineMat = new THREE.MeshStandardMaterial({
+        color: 0xd5dde6,
+        emissive: 0x10141c,
+        roughness: 0.6,
+        metalness: 0.2
+      })
+      const yellowMat = new THREE.MeshStandardMaterial({
+        color: 0xf2c76a,
+        emissive: 0x31210a,
+        roughness: 0.4,
+        metalness: 0.2
+      })
+
+      const dashLength = 6
+      const dashGap = 8
+      const dashGeo = new THREE.PlaneGeometry(0.22, dashLength)
+
+      const halfMedian = world.medianWidth / 2
+      const linePositions = [
+        halfMedian + world.laneWidth,
+        halfMedian + world.laneWidth * 2,
+        -halfMedian - world.laneWidth,
+        -halfMedian - world.laneWidth * 2
+      ]
+
+      linePositions.forEach((x) => {
+        for (let z = -world.length / 2; z < world.length / 2; z += dashLength + dashGap) {
+          const dash = new THREE.Mesh(dashGeo, lineMat)
+          dash.rotation.x = -Math.PI / 2
+          dash.position.set(x, 0.02, z + dashLength / 2)
+          roadGroup.add(dash)
+        }
+      })
+
+      const edgeGeo = new THREE.PlaneGeometry(0.22, world.length)
+      const edgeLeft = new THREE.Mesh(edgeGeo, lineMat)
+      edgeLeft.rotation.x = -Math.PI / 2
+      edgeLeft.position.set(-world.roadWidth / 2 + 0.16, 0.02, 0)
+      roadGroup.add(edgeLeft)
+      const edgeRight = edgeLeft.clone()
+      edgeRight.position.x = world.roadWidth / 2 - 0.16
+      roadGroup.add(edgeRight)
+
+      const centerLineGeo = new THREE.PlaneGeometry(0.18, world.length)
+      const centerLeft = new THREE.Mesh(centerLineGeo, yellowMat)
+      centerLeft.rotation.x = -Math.PI / 2
+      centerLeft.position.set(-0.35, 0.03, 0)
+      roadGroup.add(centerLeft)
+      const centerRight = centerLeft.clone()
+      centerRight.position.x = 0.35
+      roadGroup.add(centerRight)
+
+      scene.add(roadGroup)
+
+      const railGroup = new THREE.Group()
+      const railMat = new THREE.MeshStandardMaterial({ color: 0x1b222c, roughness: 0.55, metalness: 0.45 })
+      const railGeo = new THREE.BoxGeometry(0.25, 0.3, 18)
+      const postGeo = new THREE.BoxGeometry(0.12, 0.5, 0.12)
+      const reflectorGeo = new THREE.BoxGeometry(0.2, 0.12, 0.12)
+      const reflectorMat = new THREE.MeshStandardMaterial({
+        color: 0x46c7f0,
+        emissive: 0x46c7f0,
+        emissiveIntensity: 0.9
+      })
+      const railX = world.roadWidth / 2 + world.shoulderWidth - 0.6
+      for (let z = -world.length / 2; z < world.length / 2; z += 18) {
+        const railLeft = new THREE.Mesh(railGeo, railMat)
+        railLeft.position.set(-railX, 0.3, z + 8)
+        railLeft.castShadow = true
+        railLeft.receiveShadow = true
+        railGroup.add(railLeft)
+
+        const railRight = railLeft.clone()
+        railRight.position.x = railX
+        railGroup.add(railRight)
+
+        const postLeft = new THREE.Mesh(postGeo, railMat)
+        postLeft.position.set(-railX, 0.3, z + 2)
+        railGroup.add(postLeft)
+        const postRight = postLeft.clone()
+        postRight.position.x = railX
+        railGroup.add(postRight)
+
+        const reflectorLeft = new THREE.Mesh(reflectorGeo, reflectorMat)
+        reflectorLeft.position.set(-railX, 0.42, z + 2)
+        railGroup.add(reflectorLeft)
+        const reflectorRight = reflectorLeft.clone()
+        reflectorRight.position.x = railX
+        railGroup.add(reflectorRight)
+      }
+      scene.add(railGroup)
+
+      const medianGroup = new THREE.Group()
+      const medianMat = new THREE.MeshStandardMaterial({
+        color: 0xf2c76a,
+        emissive: 0xf2c76a,
+        emissiveIntensity: 0.35
+      })
+      for (let z = -world.length / 2; z < world.length / 2; z += 12) {
+        const marker = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.4), medianMat)
+        marker.position.set(0, 0.06, z + 4)
+        medianGroup.add(marker)
+      }
+      scene.add(medianGroup)
+
+      const streetGroup = new THREE.Group()
+      const poleMat = new THREE.MeshStandardMaterial({ color: 0x1b2029, roughness: 0.6, metalness: 0.4 })
+      const lampMat = new THREE.MeshStandardMaterial({
+        color: 0xf2c76a,
+        emissive: 0xf2c76a,
+        emissiveIntensity: 0.9
+      })
+      for (let i = 0; i < 12; i += 1) {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 7.5, 10), poleMat)
+        pole.position.set(0.6, 3.7, -world.length / 2 + i * 90)
+        pole.castShadow = true
+        streetGroup.add(pole)
+
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.12), poleMat)
+        arm.position.set(1.2, 6.8, pole.position.z)
+        streetGroup.add(arm)
+
+        const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.5), lampMat)
+        lamp.position.set(1.8, 6.6, pole.position.z)
+        streetGroup.add(lamp)
+
+        const glow = new THREE.PointLight(0xf2c76a, 0.45, 28, 2.2)
+        glow.position.set(1.8, 5.8, pole.position.z)
+        streetGroup.add(glow)
+      }
+      scene.add(streetGroup)
+
+      const neonGroup = new THREE.Group()
+      const neonColors = [0x46c7f0, 0xf2c76a, 0x7ce0ff]
+      for (let i = 0; i < 10; i += 1) {
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.08, 0.12, 6, 10),
+          new THREE.MeshStandardMaterial({ color: 0x1a1f28, roughness: 0.7 })
+        )
+        const sign = new THREE.Mesh(
+          new THREE.BoxGeometry(1.8, 1.1, 0.2),
+          new THREE.MeshStandardMaterial({
+            color: neonColors[i % neonColors.length],
+            emissive: neonColors[i % neonColors.length],
+            emissiveIntensity: 0.8,
+            roughness: 0.3
+          })
+        )
+        pole.position.y = 3
+        const xSide = i % 2 === 0 ? 1 : -1
+        const xOffset = (world.roadWidth / 2 + world.shoulderWidth + 3.5) * xSide
+        const zOffset = -world.length / 2 + i * 90
+        pole.position.x = xOffset
+        pole.position.z = zOffset
+        sign.position.set(xOffset + 1.2 * xSide, 4.2, zOffset)
+        neonGroup.add(pole)
+        neonGroup.add(sign)
+      }
+      scene.add(neonGroup)
+
+      const skylineGroup = new THREE.Group()
+      const windowTexture = createWindowTexture()
+      const skylineMat = new THREE.MeshStandardMaterial({
+        color: 0x0b1018,
+        emissive: 0x1d2430,
+        emissiveIntensity: 0.6,
+        map: windowTexture,
+        emissiveMap: windowTexture,
+        roughness: 0.85
+      })
+      for (let i = 0; i < 26; i += 1) {
+        const width = 6 + Math.random() * 8
+        const height = 8 + Math.random() * 32
+        const depth = 6 + Math.random() * 8
+        const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), skylineMat)
+        const side = i % 2 === 0 ? 1 : -1
+        const xOffset = side * (world.totalWidth / 2 + 18 + Math.random() * 12)
+        const zOffset = -world.length / 2 + i * 38 + Math.random() * 16
+        building.position.set(xOffset, height / 2 - 0.05, zOffset)
+        skylineGroup.add(building)
+      }
+      scene.add(skylineGroup)
+
+      const starsGeo = new THREE.BufferGeometry()
+      const starCount = 220
+      const starPositions = new Float32Array(starCount * 3)
+      for (let i = 0; i < starCount; i += 1) {
+        const idx = i * 3
+        starPositions[idx] = (Math.random() - 0.5) * 300
+        starPositions[idx + 1] = 60 + Math.random() * 80
+        starPositions[idx + 2] = (Math.random() - 0.5) * world.length
+      }
+      starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
+      const starsMat = new THREE.PointsMaterial({ color: 0xcfe2ff, size: 0.7, transparent: true, opacity: 0.9 })
+      const stars = new THREE.Points(starsGeo, starsMat)
+      scene.add(stars)
+
+      const mistGeo = new THREE.BufferGeometry()
+      const mistCount = 160
+      const mistPositions = new Float32Array(mistCount * 3)
+      for (let i = 0; i < mistCount; i += 1) {
+        const idx = i * 3
+        mistPositions[idx] = (Math.random() - 0.5) * world.roadWidth * 1.2
+        mistPositions[idx + 1] = 1.8 + Math.random() * 4
+        mistPositions[idx + 2] = (Math.random() - 0.5) * world.length
+      }
+      mistGeo.setAttribute('position', new THREE.BufferAttribute(mistPositions, 3))
+      const mistMat = new THREE.PointsMaterial({
+        color: 0x9aa8bb,
+        size: 1.6,
+        transparent: true,
+        opacity: 0.2,
+        depthWrite: false
+      })
+      const mist = new THREE.Points(mistGeo, mistMat)
+      scene.add(mist)
+
+      const rainCount = 260
+      const rainPositions = new Float32Array(rainCount * 2 * 3)
+      const rainSpeeds = new Float32Array(rainCount)
+      for (let i = 0; i < rainCount; i += 1) {
+        const x = (Math.random() - 0.5) * world.roadWidth * 1.4
+        const y = 8 + Math.random() * 20
+        const z = (Math.random() - 0.5) * world.length
+        const idx = i * 6
+        rainPositions[idx] = x
+        rainPositions[idx + 1] = y
+        rainPositions[idx + 2] = z
+        rainPositions[idx + 3] = x
+        rainPositions[idx + 4] = y - 1.8
+        rainPositions[idx + 5] = z
+        rainSpeeds[i] = 10 + Math.random() * 10
+      }
+      const rainGeo = new THREE.BufferGeometry()
+      rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3))
+      const rainMat = new THREE.LineBasicMaterial({
+        color: 0x7aa5c9,
+        transparent: true,
+        opacity: 0.35,
+        depthWrite: false
+      })
+      const rain = new THREE.LineSegments(rainGeo, rainMat)
+      rain.frustumCulled = false
+      scene.add(rain)
+
+      const tempVector = new THREE.Vector3()
+      const startScreen = document.getElementById('start-screen')
+      const resultScreen = document.getElementById('result-screen')
+      const resultReplayButton = document.getElementById('result-replay')
+      const resultTime = document.getElementById('result-time')
+      const resultSpeed = document.getElementById('result-speed')
+      const resultNear = document.getElementById('result-near')
+      const resultCollisions = document.getElementById('result-collisions')
+      const resultBoost = document.getElementById('result-boost')
+      const resultScore = document.getElementById('result-score')
+      const radioText = document.getElementById('radio-text')
+      const startButton = document.getElementById('start-button')
+      const boostButton = document.getElementById('boost-btn')
+      const restartButton = document.getElementById('restart-btn')
+      const muteButton = document.getElementById('mute-btn')
+      const masterSlider = document.getElementById('master-slider')
+      const sirenSlider = document.getElementById('siren-slider')
+      const engineSlider = document.getElementById('engine-slider')
+      document.body.classList.add('start')
+
+      const createBike = (bodyColor, accentColor) => {
+        const group = new THREE.Group()
+        const bodyMat = new THREE.MeshToonMaterial({ color: bodyColor })
+        const accentMat = new THREE.MeshStandardMaterial({
+          color: accentColor,
+          roughness: 0.4,
+          metalness: 0.5,
+          emissive: 0x0a0e14
+        })
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0d0f14, roughness: 0.9 })
+        const outlineMat = new THREE.LineBasicMaterial({ color: 0x05060a, transparent: true, opacity: 0.7 })
+        const addOutline = (mesh) => {
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), outlineMat)
+          edges.scale.setScalar(1.02)
+          mesh.add(edges)
+        }
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 2.4), bodyMat)
+        body.position.y = 0.5
+        body.castShadow = true
+        addOutline(body)
+        group.add(body)
+
+        const tank = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.9), accentMat)
+        tank.position.set(0, 0.75, 0.4)
+        tank.castShadow = true
+        addOutline(tank)
+        group.add(tank)
+
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.25, 0.8), accentMat)
+        seat.position.set(0, 0.75, -0.5)
+        seat.castShadow = true
+        addOutline(seat)
+        group.add(seat)
+
+        const wheelGeo = new THREE.TorusGeometry(0.35, 0.12, 10, 18)
+        const frontWheel = new THREE.Mesh(wheelGeo, wheelMat)
+        frontWheel.rotation.x = Math.PI / 2
+        frontWheel.position.set(0, 0.25, 1.1)
+        frontWheel.castShadow = true
+        group.add(frontWheel)
+        const backWheel = frontWheel.clone()
+        backWheel.position.z = -1.1
+        group.add(backWheel)
+
+        const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 8), accentMat)
+        fork.position.set(0, 0.55, 1.05)
+        fork.rotation.x = Math.PI / 2
+        fork.castShadow = true
+        group.add(fork)
+
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.08, 0.2), accentMat)
+        handle.position.set(0, 0.9, 0.9)
+        handle.castShadow = true
+        group.add(handle)
+
+        return { group, accentMat }
+      }
+
+      const createPoliceBike = () => {
+        const base = createBike(0xdfe7f2, 0x1d242e)
+        const boxMat = new THREE.MeshStandardMaterial({
+          color: 0x1a202a,
+          roughness: 0.4,
+          metalness: 0.5,
+          emissive: 0x07090c
+        })
+        const rearBox = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 0.9), boxMat)
+        rearBox.position.set(0, 0.75, -1.25)
+        base.group.add(rearBox)
+
+        const lightMatRed = new THREE.MeshStandardMaterial({
+          color: 0xff4661,
+          emissive: 0xff4661,
+          emissiveIntensity: 0.25
+        })
+        const lightMatBlue = new THREE.MeshStandardMaterial({
+          color: 0x46c7f0,
+          emissive: 0x46c7f0,
+          emissiveIntensity: 0.25
+        })
+        const lightLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.3), lightMatRed)
+        lightLeft.position.set(-0.18, 1.05, -1.25)
+        base.group.add(lightLeft)
+        const lightRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 0.3), lightMatBlue)
+        lightRight.position.set(0.18, 1.05, -1.25)
+        base.group.add(lightRight)
+
+        const headlight = new THREE.SpotLight(0xcfe2ff, 1.1, 40, Math.PI / 6, 0.5, 1.1)
+        headlight.position.set(0, 0.95, 1.35)
+        headlight.castShadow = true
+        const headTarget = new THREE.Object3D()
+        headTarget.position.set(0, 0.6, 6)
+        base.group.add(headlight)
+        base.group.add(headTarget)
+        headlight.target = headTarget
+
+        const redPoint = new THREE.PointLight(0xff4661, 0, 8)
+        redPoint.position.set(-0.4, 1.1, -1.1)
+        base.group.add(redPoint)
+        const bluePoint = new THREE.PointLight(0x46c7f0, 0, 8)
+        bluePoint.position.set(0.4, 1.1, -1.1)
+        base.group.add(bluePoint)
+
+        const boxAnchor = new THREE.Object3D()
+        boxAnchor.position.set(0, 1.15, -1.25)
+        base.group.add(boxAnchor)
+
+        const boostRingMat = new THREE.MeshBasicMaterial({
+          color: 0xf2c76a,
+          transparent: true,
+          opacity: 0.0,
+          side: THREE.DoubleSide
+        })
+        const boostRing = new THREE.Mesh(new THREE.RingGeometry(0.5, 1.2, 28), boostRingMat)
+        boostRing.rotation.x = -Math.PI / 2
+        boostRing.position.set(0, 0.08, -0.2)
+        base.group.add(boostRing)
+
+        return {
+          group: base.group,
+          lightMatRed,
+          lightMatBlue,
+          redPoint,
+          bluePoint,
+          boxAnchor,
+          boostRing
+        }
+      }
+
+      const createCriminalBike = () => {
+        const base = createBike(0x131720, 0xff4661)
+        const tailLight = new THREE.PointLight(0xff4661, 0.7, 8, 2)
+        tailLight.position.set(0, 0.8, -1.4)
+        base.group.add(tailLight)
+        return base
+      }
+
+      const createDrone = () => {
+        const group = new THREE.Group()
+        const bodyMat = new THREE.MeshStandardMaterial({
+          color: 0xced6e0,
+          roughness: 0.35,
+          metalness: 0.6,
+          emissive: 0x1a1f28
+        })
+        const glowMat = new THREE.MeshStandardMaterial({
+          color: 0x46c7f0,
+          emissive: 0x46c7f0,
+          emissiveIntensity: 0.9
+        })
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.35, 14, 14), bodyMat)
+        group.add(body)
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), glowMat)
+        group.add(core)
+
+        const scanRingMat = new THREE.MeshBasicMaterial({
+          color: 0x46c7f0,
+          transparent: true,
+          opacity: 0.2,
+          side: THREE.DoubleSide
+        })
+        const scanRing = new THREE.Mesh(new THREE.RingGeometry(0.6, 1.6, 28), scanRingMat)
+        scanRing.rotation.x = -Math.PI / 2
+
+        const spotLight = new THREE.SpotLight(0x46c7f0, 0.65, 30, Math.PI / 6, 0.6, 1.3)
+        spotLight.position.set(0, 0.2, 0)
+        const spotTarget = new THREE.Object3D()
+        spotTarget.position.set(0, -6, 0)
+        group.add(spotLight)
+        group.add(spotTarget)
+        spotLight.target = spotTarget
+
+        const armMat = new THREE.MeshStandardMaterial({ color: 0x252b36, roughness: 0.4, metalness: 0.5 })
+        const armGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 8)
+        const rotorGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 12)
+        const rotors = []
+
+        for (let i = 0; i < 4; i += 1) {
+          const arm = new THREE.Mesh(armGeo, armMat)
+          arm.rotation.z = i % 2 === 0 ? Math.PI / 2 : 0
+          if (i < 2) {
+            arm.rotation.z = Math.PI / 2
+          }
+          const angle = (Math.PI / 2) * i
+          const x = Math.cos(angle) * 0.45
+          const z = Math.sin(angle) * 0.45
+          arm.position.set(x, 0, z)
+          arm.rotation.x = Math.PI / 2
+          group.add(arm)
+
+          const rotor = new THREE.Mesh(rotorGeo, glowMat)
+          rotor.position.set(x * 1.4, 0.1, z * 1.4)
+          rotor.rotation.x = Math.PI / 2
+          group.add(rotor)
+          rotors.push(rotor)
+        }
+
+        return { group, rotors, scanRing, spotLight }
+      }
+
+      const createTrafficCar = () => {
+        const group = new THREE.Group()
+        const palette = [0x1c222d, 0x2b3342, 0x141820, 0x26272f]
+        const bodyMat = new THREE.MeshStandardMaterial({
+          color: palette[Math.floor(Math.random() * palette.length)],
+          roughness: 0.45,
+          metalness: 0.6
+        })
+        const cabinMat = new THREE.MeshStandardMaterial({
+          color: 0x0b0f16,
+          roughness: 0.2,
+          metalness: 0.2,
+          transparent: true,
+          opacity: 0.7
+        })
+        const headMat = new THREE.MeshStandardMaterial({
+          color: 0xcfe2ff,
+          emissive: 0xcfe2ff,
+          emissiveIntensity: 1
+        })
+        const tailMat = new THREE.MeshStandardMaterial({
+          color: 0xff4661,
+          emissive: 0xff4661,
+          emissiveIntensity: 0.7
+        })
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.5, 3.4), bodyMat)
+        body.position.y = 0.35
+        body.castShadow = true
+        body.receiveShadow = true
+        group.add(body)
+
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.45, 1.5), cabinMat)
+        cabin.position.set(0, 0.72, -0.1)
+        cabin.castShadow = true
+        group.add(cabin)
+
+        const headLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.1), headMat)
+        headLeft.position.set(-0.5, 0.35, 1.65)
+        group.add(headLeft)
+        const headRight = headLeft.clone()
+        headRight.position.x = 0.5
+        group.add(headRight)
+
+        const tailLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.1), tailMat)
+        tailLeft.position.set(-0.5, 0.35, -1.65)
+        group.add(tailLeft)
+        const tailRight = tailLeft.clone()
+        tailRight.position.x = 0.5
+        group.add(tailRight)
+
+        return { group }
+      }
+
+      const police = createPoliceBike()
+      police.group.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true
+          child.receiveShadow = true
+        }
+      })
+      police.group.position.set(world.roadWidth / 2 + world.shoulderWidth / 2, 0.35, 0)
+      police.group.rotation.y = 0
+      scene.add(police.group)
+
+      const criminal = createCriminalBike()
+      criminal.group.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true
+          child.receiveShadow = true
+        }
+      })
+      criminal.group.position.set(-world.laneWidth * 1.5, 0.35, -160)
+      criminal.group.rotation.y = 0
+      scene.add(criminal.group)
+
+      const trafficGroup = new THREE.Group()
+      const trafficCars = []
+      const laneCentersRight = [
+        halfMedian + world.laneWidth * 0.5,
+        halfMedian + world.laneWidth * 1.5,
+        halfMedian + world.laneWidth * 2.5
+      ]
+      const laneCentersLeft = laneCentersRight.map((x) => -x)
+
+      const spawnTraffic = (count) => {
+        for (let i = 0; i < count; i += 1) {
+          const sideRight = i % 2 === 0 || Math.random() > 0.6
+          const laneSet = sideRight ? laneCentersRight : laneCentersLeft
+          const laneX = laneSet[Math.floor(Math.random() * laneSet.length)]
+          const z = -world.length / 2 + Math.random() * world.length
+          const car = createTrafficCar()
+          car.group.position.set(laneX, 0.3, z)
+          car.group.rotation.y = sideRight ? 0 : Math.PI
+          car.dir = sideRight ? 1 : -1
+          car.speed = (sideRight ? 16 : 20) + Math.random() * 6
+          car.cooldown = 0
+          trafficCars.push(car)
+          trafficGroup.add(car.group)
+        }
+        scene.add(trafficGroup)
+      }
+
+      spawnTraffic(12)
+
+      const droneState = {
+        active: false,
+        launched: false,
+        launchProgress: 0,
+        group: null,
+        rotors: [],
+        scanRing: null,
+        spotLight: null
+      }
+
+      const starBursts = []
+
+      const spawnStarBurst = (position) => {
+        const burst = { meshes: [], velocities: [], life: 1.2 }
+        const starMat = new THREE.MeshBasicMaterial({
+          color: 0xf6f0c8,
+          transparent: true,
+          opacity: 0.9
+        })
+        for (let i = 0; i < 12; i += 1) {
+          const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.25), starMat.clone())
+          star.position.copy(position)
+          const angle = Math.random() * Math.PI * 2
+          const rise = 0.8 + Math.random() * 0.8
+          const velocity = new THREE.Vector3(Math.cos(angle), rise, Math.sin(angle)).multiplyScalar(2.2)
+          burst.meshes.push(star)
+          burst.velocities.push(velocity)
+          scene.add(star)
+        }
+        starBursts.push(burst)
+      }
+
+      const spawnSparkBurst = (position) => {
+        const burst = { meshes: [], velocities: [], life: 0.9 }
+        const sparkMat = new THREE.MeshBasicMaterial({
+          color: 0xf2c76a,
+          transparent: true,
+          opacity: 0.85
+        })
+        for (let i = 0; i < 8; i += 1) {
+          const spark = new THREE.Mesh(new THREE.TetrahedronGeometry(0.18), sparkMat.clone())
+          spark.position.copy(position)
+          const angle = Math.random() * Math.PI * 2
+          const rise = 0.6 + Math.random() * 0.6
+          const velocity = new THREE.Vector3(Math.cos(angle), rise, Math.sin(angle)).multiplyScalar(2.8)
+          burst.meshes.push(spark)
+          burst.velocities.push(velocity)
+          scene.add(spark)
+        }
+        starBursts.push(burst)
+      }
+
+      const hud = {
+        objective: document.getElementById('objective'),
+        status: document.getElementById('status'),
+        speed: document.getElementById('speed'),
+        timeText: document.getElementById('time-text'),
+        scoreText: document.getElementById('score-text'),
+        distance: document.getElementById('distance'),
+        phaseText: document.getElementById('phase-text'),
+        phaseFill: document.getElementById('phase-fill'),
+        lockText: document.getElementById('lock-text'),
+        lockFill: document.getElementById('lock-fill'),
+        boostText: document.getElementById('boost-text'),
+        boostFill: document.getElementById('boost-fill'),
+        droneText: document.getElementById('drone-text'),
+        audioStatus: document.getElementById('audio-status'),
+        siren: document.getElementById('siren'),
+        note: document.getElementById('note'),
+        headingLine: document.getElementById('heading-line')
+      }
+
+      const resetRun = () => {
+        police.group.position.set(world.roadWidth / 2 + world.shoulderWidth / 2, 0.35, 0)
+        police.group.rotation.y = 0
+        criminal.group.position.set(-world.laneWidth * 1.5, 0.35, -160)
+        criminal.group.rotation.y = 0
+        policeMotion.speed = 0
+        controlState.heading = 0
+        gameState.time = 0
+        gameState.sirenActive = false
+        boostState.active = false
+        boostState.energy = 1
+        captureState.progress = 0
+        captureState.inRange = false
+        captureState.lockCalled = false
+        stats.chaseTime = 0
+        stats.nearMisses = 0
+        stats.collisions = 0
+        stats.topSpeed = 0
+        stats.boostSeconds = 0
+        stats.score = 0
+        hud.status.textContent = 'PATROL'
+        hud.siren.textContent = 'Standby'
+        hud.objective.innerHTML = 'Objective: <strong>Hold position. Wait for the fly-by.</strong>'
+        hud.phaseText.textContent = 'Patrol'
+        hud.phaseFill.style.width = '20%'
+        hud.timeText.textContent = '0:00'
+        hud.scoreText.textContent = '0'
+        hud.lockText.textContent = '---'
+        hud.lockFill.style.width = '0%'
+        hud.boostText.textContent = 'Ready'
+        hud.boostFill.style.width = '100%'
+        hud.droneText.textContent = 'Docked'
+        police.lightMatRed.emissiveIntensity = 0.25
+        police.lightMatBlue.emissiveIntensity = 0.25
+        police.redPoint.intensity = 0
+        police.bluePoint.intensity = 0
+        if (police.boostRing) {
+          police.boostRing.material.opacity = 0
+        }
+        stopSiren()
+        document.body.classList.remove('chase', 'siren', 'boost', 'lock', 'caught')
+        if (resultScreen) {
+          resultScreen.classList.remove('active')
+        }
+        setRadio('Unit 12 on patrol. Awaiting contact.')
+
+        if (droneState.group) {
+          scene.remove(droneState.group)
+        }
+        if (droneState.scanRing) {
+          scene.remove(droneState.scanRing)
+        }
+        droneState.active = false
+        droneState.launched = false
+        droneState.launchProgress = 0
+        droneState.group = null
+        droneState.rotors = []
+        droneState.scanRing = null
+        droneState.spotLight = null
+
+        starBursts.forEach((burst) => {
+          burst.meshes.forEach((mesh) => scene.remove(mesh))
+        })
+        starBursts.length = 0
+      }
+
+      const startGame = () => {
+        if (gameState.mode !== 'start') return
+        if (!gameState.audioArmed) {
+          initAudio()
+          gameState.audioArmed = true
+          hud.note.textContent = 'Audio armed. Siren ready.'
+        }
+        resetRun()
+        gameState.mode = 'idle'
+        startScreen.classList.add('hidden')
+        document.body.classList.remove('start', 'chase', 'siren', 'boost', 'lock', 'caught')
+        boostState.active = false
+        setRadio('Standing by. Watch for the fly-by.')
+      }
+
+      startButton.addEventListener('click', startGame)
+
+      const applyAudioSettings = () => {
+        updateMasterGain()
+        updateSirenMix()
+        updateEngineMix()
+        syncAudioUi()
+      }
+
+      masterSlider.addEventListener('input', () => {
+        audioState.master = parseFloat(masterSlider.value)
+        applyAudioSettings()
+      })
+
+      sirenSlider.addEventListener('input', () => {
+        audioState.siren = parseFloat(sirenSlider.value)
+        applyAudioSettings()
+      })
+
+      engineSlider.addEventListener('input', () => {
+        audioState.engine = parseFloat(engineSlider.value)
+        applyAudioSettings()
+      })
+
+      muteButton.addEventListener('click', () => {
+        audioState.muted = !audioState.muted
+        applyAudioSettings()
+      })
+
+      const restartGame = () => {
+        resetRun()
+        gameState.mode = 'start'
+        startScreen.classList.remove('hidden')
+        document.body.classList.add('start')
+        document.body.classList.remove('caught', 'chase', 'siren', 'boost', 'lock')
+      }
+
+      restartButton.addEventListener('click', restartGame)
+      resultReplayButton.addEventListener('click', restartGame)
+
+      const setBoostActive = (active) => {
+        if (gameState.mode !== 'chase') active = false
+        if (active && boostState.energy <= 0.08) return
+        boostState.active = active
+        boostButton.classList.toggle('active', active)
+        document.body.classList.toggle('boost', active)
+      }
+
+      boostButton.addEventListener('pointerdown', (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setBoostActive(true)
+      })
+      boostButton.addEventListener('pointerup', (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        setBoostActive(false)
+      })
+      boostButton.addEventListener('pointerleave', () => setBoostActive(false))
+      boostButton.addEventListener('pointercancel', () => setBoostActive(false))
+      window.addEventListener('pointerup', () => setBoostActive(false))
+
+      const controlState = {
+        heading: 0,
+        pointerActive: false
+      }
+
+      const gameState = {
+        mode: 'start',
+        time: 0,
+        sirenActive: false,
+        audioArmed: false
+      }
+
+      const boostState = {
+        active: false,
+        energy: 1
+      }
+
+      const captureState = {
+        progress: 0,
+        inRange: false,
+        lockCalled: false
+      }
+
+      const audioState = {
+        master: 0.85,
+        siren: 0.7,
+        engine: 0.65,
+        muted: false
+      }
+
+      const stats = {
+        chaseTime: 0,
+        nearMisses: 0,
+        collisions: 0,
+        topSpeed: 0,
+        boostSeconds: 0,
+        score: 0
+      }
+
+      const radioState = {
+        last: ''
+      }
+
+      const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60)
+        const secs = Math.floor(seconds % 60)
+        return `${mins}:${secs.toString().padStart(2, '0')}`
+      }
+
+      const setRadio = (message) => {
+        if (!radioText || radioState.last === message) return
+        radioState.last = message
+        radioText.textContent = message
+      }
+
+      const calcScore = () => {
+        const base = 1200
+        const timePenalty = stats.chaseTime * 12
+        const nearBonus = stats.nearMisses * 45
+        const boostBonus = stats.boostSeconds * 6
+        const collisionPenalty = stats.collisions * 140
+        return Math.max(0, Math.round(base + nearBonus + boostBonus - timePenalty - collisionPenalty))
+      }
+
+      const policeMotion = {
+        speed: 0,
+        maxSpeed: 28,
+        accel: 14
+      }
+
+      const criminalMotion = {
+        speed: 34
+      }
+
+      let audioContext = null
+      let masterGain = null
+      let sirenGain = null
+      let engineGain = null
+      let sirenAudio = null
+      let sirenSource = null
+      let sirenOsc = null
+      let sirenLfo = null
+      let sirenLfoGain = null
+      let sirenUsingOsc = false
+      let engineOscA = null
+      let engineOscB = null
+      let engineFilter = null
+
+      const syncAudioUi = () => {
+        if (masterSlider) masterSlider.value = audioState.master
+        if (sirenSlider) sirenSlider.value = audioState.siren
+        if (engineSlider) engineSlider.value = audioState.engine
+        if (hud.audioStatus) {
+          hud.audioStatus.textContent = audioState.muted ? 'Muted' : 'Live'
+        }
+        if (muteButton) {
+          muteButton.textContent = audioState.muted ? 'Unmute' : 'Mute'
+        }
+      }
+
+      const updateMasterGain = () => {
+        if (!masterGain) return
+        masterGain.gain.value = audioState.muted ? 0 : audioState.master
+      }
+
+      const updateSirenMix = () => {
+        if (!audioContext || !sirenGain) return
+        const target = gameState.sirenActive ? audioState.siren : 0
+        sirenGain.gain.setTargetAtTime(target, audioContext.currentTime, 0.05)
+      }
+
+      const updateEngineMix = () => {
+        if (!audioContext || !engineGain || !engineOscA || !engineOscB || !engineFilter) return
+        const speedRatio = policeMotion.maxSpeed > 0 ? policeMotion.speed / policeMotion.maxSpeed : 0
+        const chaseFactor = gameState.mode === 'chase' ? 1 : gameState.mode === 'idle' ? 0.5 : 0
+        const boostFactor = boostState.active ? 1.2 : 1
+        const base = 70 + speedRatio * 220 + boostFactor * 20
+        engineOscA.frequency.setTargetAtTime(base, audioContext.currentTime, 0.05)
+        engineOscB.frequency.setTargetAtTime(base * 1.6, audioContext.currentTime, 0.05)
+        engineFilter.frequency.setTargetAtTime(200 + speedRatio * 700, audioContext.currentTime, 0.1)
+        const volume = audioState.engine * (0.02 + speedRatio * 0.08) * chaseFactor
+        engineGain.gain.setTargetAtTime(volume, audioContext.currentTime, 0.08)
+      }
+
+      const setupSirenOsc = () => {
+        if (!audioContext || sirenUsingOsc) return
+        sirenUsingOsc = true
+        sirenOsc = audioContext.createOscillator()
+        sirenLfo = audioContext.createOscillator()
+        sirenLfoGain = audioContext.createGain()
+
+        sirenOsc.type = 'sawtooth'
+        sirenOsc.frequency.value = 520
+        sirenLfo.type = 'sine'
+        sirenLfo.frequency.value = 1.4
+        sirenLfoGain.gain.value = 180
+
+        sirenLfo.connect(sirenLfoGain)
+        sirenLfoGain.connect(sirenOsc.frequency)
+        sirenOsc.connect(sirenGain)
+
+        sirenOsc.start()
+        sirenLfo.start()
+      }
+
+      const setupEngineOsc = () => {
+        if (!audioContext || engineOscA || engineOscB) return
+        engineOscA = audioContext.createOscillator()
+        engineOscB = audioContext.createOscillator()
+        engineFilter = audioContext.createBiquadFilter()
+        engineFilter.type = 'lowpass'
+        engineFilter.frequency.value = 220
+
+        engineOscA.type = 'sawtooth'
+        engineOscB.type = 'square'
+        engineOscA.frequency.value = 70
+        engineOscB.frequency.value = 110
+
+        engineOscA.connect(engineFilter)
+        engineOscB.connect(engineFilter)
+        engineFilter.connect(engineGain)
+
+        engineOscA.start()
+        engineOscB.start()
+      }
+
+      const initAudio = () => {
+        if (audioContext) {
+          audioContext.resume()
+          updateMasterGain()
+          syncAudioUi()
+          return
+        }
+        audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        masterGain = audioContext.createGain()
+        sirenGain = audioContext.createGain()
+        engineGain = audioContext.createGain()
+        sirenGain.gain.value = 0
+        engineGain.gain.value = 0
+        masterGain.gain.value = 0
+
+        sirenGain.connect(masterGain)
+        engineGain.connect(masterGain)
+        masterGain.connect(audioContext.destination)
+
+        // Replace with your MP3 siren asset.
+        sirenAudio = new Audio('audio/siren-placeholder.mp3')
+        sirenAudio.loop = true
+        sirenAudio.preload = 'auto'
+        sirenAudio.addEventListener('error', () => {
+          setupSirenOsc()
+        })
+        sirenAudio.addEventListener('canplaythrough', () => {
+          if (!gameState.sirenActive) return
+          sirenAudio.play().catch(() => {})
+        })
+        try {
+          sirenSource = audioContext.createMediaElementSource(sirenAudio)
+          sirenSource.connect(sirenGain)
+        } catch (error) {
+          setupSirenOsc()
+        }
+
+        setupEngineOsc()
+        updateMasterGain()
+        syncAudioUi()
+        if (gameState.sirenActive) {
+          startSiren()
+        }
+      }
+
+      const startSiren = () => {
+        if (!audioContext) return
+        if (sirenAudio) {
+          sirenAudio.play().catch(() => {})
+        } else {
+          setupSirenOsc()
+        }
+        updateSirenMix()
+      }
+
+      const stopSiren = () => {
+        if (!audioContext) return
+        if (sirenAudio) {
+          sirenAudio.pause()
+          sirenAudio.currentTime = 0
+        }
+        updateSirenMix()
+      }
+
+      const updateHeadingFromPointer = (clientX, clientY) => {
+        const rect = renderer.domElement.getBoundingClientRect()
+        const cx = rect.left + rect.width / 2
+        const cy = rect.top + rect.height / 2
+        const dx = clientX - cx
+        const dy = clientY - cy
+        if (Math.hypot(dx, dy) < 6) return
+        controlState.heading = Math.atan2(dx, -dy)
+      }
+
+      const onPointerDown = (event) => {
+        if (gameState.mode === 'start') return
+        if (event.target.closest && event.target.closest('#controls, #mix-panel')) return
+        controlState.pointerActive = true
+        updateHeadingFromPointer(event.clientX, event.clientY)
+        if (!gameState.audioArmed) {
+          initAudio()
+          gameState.audioArmed = true
+          hud.note.textContent = 'Audio armed. Siren ready.'
+        }
+      }
+
+      const onPointerMove = (event) => {
+        if (!controlState.pointerActive) return
+        if (event.target.closest && event.target.closest('#controls, #mix-panel')) return
+        updateHeadingFromPointer(event.clientX, event.clientY)
+      }
+
+      const onPointerUp = () => {
+        controlState.pointerActive = false
+      }
+
+      window.addEventListener('pointerdown', onPointerDown)
+      window.addEventListener('pointermove', onPointerMove)
+      window.addEventListener('pointerup', onPointerUp)
+
+      const triggerChase = () => {
+        gameState.mode = 'chase'
+        gameState.sirenActive = true
+        policeMotion.speed = 8
+        captureState.progress = 0
+        captureState.inRange = false
+        captureState.lockCalled = false
+        document.body.classList.remove('caught')
+        document.body.classList.add('chase', 'siren')
+        hud.status.textContent = 'PURSUIT'
+        hud.siren.textContent = 'Active'
+        hud.objective.innerHTML = 'Objective: <strong>Close the distance and catch the target.</strong>'
+        setRadio('Target in sight. Pursuit engaged.')
+        startSiren()
+        spawnStarBurst(police.group.position.clone())
+
+        const drone = createDrone()
+        droneState.group = drone.group
+        droneState.rotors = drone.rotors
+        droneState.scanRing = drone.scanRing
+        droneState.spotLight = drone.spotLight
+        droneState.active = true
+        droneState.launched = false
+        droneState.launchProgress = 0
+        police.boxAnchor.getWorldPosition(tempVector)
+        droneState.group.position.copy(tempVector)
+        scene.add(droneState.group)
+        if (droneState.scanRing) {
+          droneState.scanRing.position.set(tempVector.x, 0.05, tempVector.z)
+          scene.add(droneState.scanRing)
+        }
+        hud.droneText.textContent = 'Deploying'
+      }
+
+      const updatePolice = (dt) => {
+        if (gameState.mode === 'start') return
+        police.group.rotation.y = controlState.heading
+        if (gameState.mode !== 'chase') return
+        const boostFactor = boostState.active ? 1.5 : 1
+        const accel = policeMotion.accel * (boostState.active ? 1.35 : 1)
+        const maxSpeed = policeMotion.maxSpeed * boostFactor
+        policeMotion.speed = Math.min(maxSpeed, policeMotion.speed + accel * dt)
+        const dir = new THREE.Vector3(Math.sin(controlState.heading), 0, Math.cos(controlState.heading))
+        police.group.position.addScaledVector(dir, policeMotion.speed * dt)
+
+        const maxX = world.roadWidth / 2 + world.shoulderWidth - 1
+        police.group.position.x = THREE.MathUtils.clamp(police.group.position.x, -maxX, maxX)
+      }
+
+      const updateCriminal = (dt, elapsed) => {
+        if (gameState.mode === 'start' || gameState.mode === 'caught') return
+        criminal.group.position.z += criminalMotion.speed * dt
+        const weave = Math.sin(elapsed * 1.3) * 0.6
+        criminal.group.position.x = -world.laneWidth * 1.5 + weave
+      }
+
+      const updateTraffic = (dt) => {
+        const centerZ = police.group.position.z
+        const half = world.length / 2
+        trafficCars.forEach((car) => {
+          car.group.position.z += car.speed * dt * car.dir
+          const dz = car.group.position.z - centerZ
+          if (dz > half) {
+            car.group.position.z -= world.length
+          }
+          if (dz < -half) {
+            car.group.position.z += world.length
+          }
+          if (car.cooldown > 0) {
+            car.cooldown -= dt
+            return
+          }
+          if (gameState.mode === 'chase') {
+            const distance = car.group.position.distanceTo(police.group.position)
+            if (distance < 2.6) {
+              car.cooldown = 1.1
+              policeMotion.speed *= 0.4
+              spawnSparkBurst(police.group.position.clone())
+              cameraShake.intensity = Math.min(1, cameraShake.intensity + 0.5)
+            }
+          }
+        })
+      }
+
+      const updateDrone = (dt) => {
+        if (!droneState.active || !droneState.group) return
+        droneState.rotors.forEach((rotor, index) => {
+          rotor.rotation.z += dt * (8 + index * 2)
+        })
+
+        if (gameState.mode === 'caught') {
+          police.boxAnchor.getWorldPosition(tempVector)
+          droneState.group.position.lerp(tempVector, 0.05)
+          if (droneState.scanRing) {
+            droneState.scanRing.material.opacity = Math.max(0, droneState.scanRing.material.opacity - dt * 0.6)
+          }
+          return
+        }
+
+        if (!droneState.launched) {
+          droneState.launchProgress += dt * 0.9
+          const lift = THREE.MathUtils.clamp(droneState.launchProgress, 0, 1)
+          police.boxAnchor.getWorldPosition(tempVector)
+          droneState.group.position.lerp(tempVector, 0.2)
+          droneState.group.position.y = tempVector.y + lift * 6
+          if (droneState.scanRing) {
+            droneState.scanRing.position.set(tempVector.x, 0.05, tempVector.z)
+            const ringScale = 0.6 + lift * 0.4
+            droneState.scanRing.scale.setScalar(ringScale)
+            droneState.scanRing.material.opacity = 0.1 + lift * 0.2
+          }
+          if (lift >= 1) {
+            droneState.launched = true
+            hud.droneText.textContent = 'Tracking'
+          }
+          return
+        }
+
+        const target = criminal.group.position.clone()
+        target.y += 5
+        const toTarget = target.sub(droneState.group.position)
+        const distance = toTarget.length()
+        if (distance > 0.1) {
+          toTarget.normalize()
+          droneState.group.position.addScaledVector(toTarget, dt * 12)
+        }
+
+        if (droneState.scanRing) {
+          droneState.scanRing.position.set(droneState.group.position.x, 0.05, droneState.group.position.z)
+          const pulse = 0.9 + Math.sin(gameState.time * 4) * 0.12
+          droneState.scanRing.scale.setScalar(pulse)
+          droneState.scanRing.material.opacity = 0.18 + Math.sin(gameState.time * 3) * 0.05
+        }
+      }
+
+      const updateStarBursts = (dt) => {
+        for (let i = starBursts.length - 1; i >= 0; i -= 1) {
+          const burst = starBursts[i]
+          burst.life -= dt
+          burst.meshes.forEach((mesh, idx) => {
+            mesh.position.addScaledVector(burst.velocities[idx], dt)
+            mesh.material.opacity = Math.max(0, burst.life)
+            mesh.scale.setScalar(Math.max(0.2, burst.life))
+          })
+          if (burst.life <= 0) {
+            burst.meshes.forEach((mesh) => scene.remove(mesh))
+            starBursts.splice(i, 1)
+          }
+        }
+      }
+
+      const updateRain = (dt) => {
+        const positions = rainGeo.attributes.position.array
+        for (let i = 0; i < rainCount; i += 1) {
+          const idx = i * 6
+          positions[idx + 1] -= rainSpeeds[i] * dt
+          positions[idx + 4] = positions[idx + 1] - 1.8
+          if (positions[idx + 1] < 1) {
+            positions[idx] = (Math.random() - 0.5) * world.roadWidth * 1.4
+            positions[idx + 1] = 8 + Math.random() * 20
+            positions[idx + 2] = (Math.random() - 0.5) * world.length
+            positions[idx + 3] = positions[idx]
+            positions[idx + 4] = positions[idx + 1] - 1.8
+            positions[idx + 5] = positions[idx + 2]
+          }
+        }
+        rainGeo.attributes.position.needsUpdate = true
+      }
+
+      const updateLights = (elapsed) => {
+        document.body.classList.toggle('siren', gameState.sirenActive)
+        if (!gameState.sirenActive) {
+          police.lightMatRed.emissiveIntensity = 0.25
+          police.lightMatBlue.emissiveIntensity = 0.25
+          police.redPoint.intensity = 0
+          police.bluePoint.intensity = 0
+          return
+        }
+        const pulse = Math.sin(elapsed * 10)
+        const redOn = pulse > 0
+        const blueOn = !redOn
+        police.lightMatRed.emissiveIntensity = redOn ? 1.6 : 0.2
+        police.lightMatBlue.emissiveIntensity = blueOn ? 1.6 : 0.2
+        police.redPoint.intensity = redOn ? 1.8 : 0.1
+        police.bluePoint.intensity = blueOn ? 1.8 : 0.1
+      }
+
+      const updateHud = (distance) => {
+        hud.headingLine.style.transform = `translate(-50%, -100%) rotate(${THREE.MathUtils.radToDeg(
+          controlState.heading
+        )}deg)`
+        if (gameState.mode === 'start') {
+          hud.speed.textContent = '0 mph'
+          hud.distance.textContent = '---'
+          return
+        }
+        const speedMph = Math.round(policeMotion.speed * 2.1)
+        hud.speed.textContent = `${speedMph} mph`
+        hud.distance.textContent = `${distance.toFixed(1)} m`
+      }
+
+      const updateBoost = (dt) => {
+        boostButton.disabled = gameState.mode !== 'chase'
+        if (gameState.mode !== 'chase') {
+          setBoostActive(false)
+        }
+        if (boostState.active) {
+          boostState.energy = Math.max(0, boostState.energy - dt * 0.35)
+          if (boostState.energy <= 0) {
+            setBoostActive(false)
+          }
+        } else {
+          boostState.energy = Math.min(1, boostState.energy + dt * 0.18)
+        }
+        hud.boostFill.style.width = `${boostState.energy * 100}%`
+        hud.boostText.textContent = boostState.active
+          ? 'Active'
+          : boostState.energy > 0.95
+            ? 'Ready'
+            : 'Charging'
+        if (police.boostRing) {
+          const targetOpacity = boostState.active ? 0.5 : 0
+          police.boostRing.material.opacity = THREE.MathUtils.lerp(
+            police.boostRing.material.opacity,
+            targetOpacity,
+            0.2
+          )
+          const ringScale = boostState.active ? 1.3 + Math.sin(gameState.time * 10) * 0.08 : 1
+          police.boostRing.scale.setScalar(ringScale)
+        }
+      }
+
+      const updateCapture = (dt, distance) => {
+        if (gameState.mode !== 'chase') {
+          captureState.progress = 0
+          captureState.inRange = false
+          hud.lockText.textContent = '---'
+          hud.lockFill.style.width = '0%'
+          document.body.classList.remove('lock')
+          return
+        }
+        const lockRange = 12
+        const hardCatch = 4.2
+        const inRange = distance < lockRange
+        captureState.inRange = inRange
+        if (inRange) {
+          captureState.progress = Math.min(1, captureState.progress + dt * 0.45)
+        } else {
+          captureState.progress = Math.max(0, captureState.progress - dt * 0.35)
+        }
+        hud.lockText.textContent = inRange ? 'Locking' : 'Searching'
+        hud.lockFill.style.width = `${captureState.progress * 100}%`
+        document.body.classList.toggle('lock', inRange)
+        if (distance < hardCatch || captureState.progress >= 1) {
+          finishCatch()
+        }
+      }
+
+      const finishCatch = () => {
+        if (gameState.mode === 'caught') return
+        gameState.mode = 'caught'
+        gameState.sirenActive = false
+        boostState.active = false
+        hud.status.textContent = 'CAUGHT'
+        hud.objective.innerHTML = 'Objective: <strong>Tutorial complete. Target secured.</strong>'
+        hud.siren.textContent = 'Standby'
+        hud.droneText.textContent = 'Returning'
+        hud.lockText.textContent = 'Locked'
+        hud.lockFill.style.width = '100%'
+        document.body.classList.remove('chase', 'siren', 'boost', 'lock')
+        document.body.classList.add('caught')
+        stopSiren()
+      }
+
+      const updateCamera = (dt) => {
+        cameraTarget.copy(police.group.position).add(cameraOffset)
+        camera.position.lerp(cameraTarget, 0.08)
+        if (cameraShake.intensity > 0.001) {
+          shakeOffset.set(
+            (Math.random() - 0.5) * cameraShake.intensity,
+            (Math.random() - 0.5) * cameraShake.intensity,
+            (Math.random() - 0.5) * cameraShake.intensity
+          )
+          camera.position.add(shakeOffset)
+          cameraShake.intensity = Math.max(0, cameraShake.intensity - dt * 1.4)
+        }
+        camera.lookAt(police.group.position)
+        const rollTarget = -Math.sin(controlState.heading) * 0.08
+        camera.rotation.z = THREE.MathUtils.lerp(camera.rotation.z, rollTarget, 0.1)
+      }
+
+      const onResize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(window.innerWidth, window.innerHeight)
+      }
+      window.addEventListener('resize', onResize)
+
+      const clock = new THREE.Clock()
+
+      resetRun()
+
+      const animate = () => {
+        const dt = Math.min(clock.getDelta(), 0.05)
+        const elapsed = clock.elapsedTime
+        gameState.time += dt
+
+        stars.material.opacity = 0.75 + Math.sin(elapsed * 0.5) * 0.1
+        wetSheen.material.opacity = 0.32 + Math.sin(elapsed * 0.6) * 0.05
+        mist.rotation.y = elapsed * 0.02
+
+        updateCriminal(dt, elapsed)
+        updateTraffic(dt)
+
+        if (gameState.mode === 'idle' && criminal.group.position.z > -5) {
+          triggerChase()
+        }
+
+        updateBoost(dt)
+        updateSirenMix()
+        updateEngineMix()
+        updatePolice(dt)
+        updateDrone(dt)
+        updateRain(dt)
+        updateStarBursts(dt)
+        updateLights(elapsed)
+        updateCamera(dt)
+        const distance = police.group.position.distanceTo(criminal.group.position)
+        updateHud(distance)
+        updateCapture(dt, distance)
+
+        renderer.render(scene, camera)
+        requestAnimationFrame(animate)
+      }
+
+      updateCamera(0)
+      animate()
     </script>
   </body>
 </html>
